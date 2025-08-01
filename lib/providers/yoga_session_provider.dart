@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import '../models/pose_model.dart';
@@ -12,6 +13,8 @@ class YogaSessionProvider extends ChangeNotifier {
   int _scriptIndex = 0;
   YogaSessionState _state = YogaSessionState.loading;
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioPlayer _bgmPlayer = AudioPlayer();
+
   Timer? _timer;
   double _progress = 0;
   DateTime? _segmentStartTime;
@@ -32,16 +35,18 @@ class YogaSessionProvider extends ChangeNotifier {
   }
 
   Future<void> loadSession(String path, {bool startImmediately = true}) async {
-  _session = await PoseLoader.loadSession(path);
-  _state = startImmediately ? YogaSessionState.playing : YogaSessionState.loading;
+    _session = await PoseLoader.loadSession(path);
+    _state = startImmediately
+        ? YogaSessionState.playing
+        : YogaSessionState.loading;
 
-  if (startImmediately) {
-    _playCurrentSegment();
+    if (startImmediately) {
+      await _startBackgroundMusic();
+      _playCurrentSegment();
+    }
+
+    notifyListeners();
   }
-
-  notifyListeners();
-}
-
 
   void _playCurrentSegment() async {
     if (_session == null) return;
@@ -50,7 +55,9 @@ class YogaSessionProvider extends ChangeNotifier {
     final script = sequence.script[_scriptIndex];
     final audioPath = _session!.assets.audio[sequence.audioRef]!;
 
+    // await _audioPlayer.setPlayerMode(PlayerMode.lowLatency);
     await _audioPlayer.play(AssetSource('audio/$audioPath'));
+    await _audioPlayer.setVolume(1.0);
 
     _segmentDuration = Duration(seconds: script.endSec - script.startSec);
     _elapsedBeforePause = Duration.zero;
@@ -64,8 +71,19 @@ class YogaSessionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _startBackgroundMusic() async {
+    try {
+      // await _bgmPlayer.setPlayerMode(PlayerMode.mediaPlayer);
+      await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
+      await _bgmPlayer.setVolume(.5);
+      await _bgmPlayer.play(AssetSource('audio/bgm.mp3'));
+    } catch (e) {
+      log("Error playing BGM: $e");
+    }
+  }
+
   void _startProgressUpdater() {
-    _progressUpdater?.cancel(); // cancel any previous timer
+    _progressUpdater?.cancel();
 
     _progressUpdater = Timer.periodic(const Duration(milliseconds: 200), (
       timer,
@@ -103,6 +121,7 @@ class YogaSessionProvider extends ChangeNotifier {
       } else {
         _state = YogaSessionState.completed;
         _audioPlayer.stop();
+        _bgmPlayer.stop();
         notifyListeners();
         return;
       }
@@ -112,6 +131,7 @@ class YogaSessionProvider extends ChangeNotifier {
 
   void pause() {
     _audioPlayer.pause();
+    _bgmPlayer.pause();
     _timer?.cancel();
 
     if (_progressStartTime != null) {
@@ -126,6 +146,7 @@ class YogaSessionProvider extends ChangeNotifier {
   void resume() {
     _state = YogaSessionState.playing;
     _audioPlayer.resume();
+    _bgmPlayer.resume();
 
     _progressStartTime = DateTime.now();
 
@@ -136,9 +157,27 @@ class YogaSessionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void resetSession() {
+    _timer?.cancel();
+    _progressUpdater?.cancel();
+    _audioPlayer.stop();
+    _bgmPlayer.stop();
+
+    _state = YogaSessionState.loading;
+    _sequenceIndex = 0;
+    _scriptIndex = 0;
+    _progress = 0;
+    _segmentStartTime = null;
+    _segmentDuration = null;
+    _elapsedBeforePause = Duration.zero;
+
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _audioPlayer.dispose();
+    _bgmPlayer.dispose();
     _timer?.cancel();
     super.dispose();
   }

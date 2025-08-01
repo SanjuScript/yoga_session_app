@@ -3,9 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:yoga_session_app/providers/yoga_session_provider.dart';
 import 'package:yoga_session_app/screens/preview_screen.dart';
-import 'package:yoga_session_app/screens/session_screen.dart';
+import 'package:yoga_session_app/services/audio_source.dart';
+import 'package:yoga_session_app/theme/color_theme.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await setAudioSources();
   runApp(
     MultiProvider(
       providers: [ChangeNotifierProvider(create: (_) => YogaSessionProvider())],
@@ -23,10 +26,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const PreviewScreen(),
+      debugShowCheckedModeBanner: false,
+      theme: CustomTheme.lightTheme,
+      home: PreviewScreen(),
     );
   }
 }
