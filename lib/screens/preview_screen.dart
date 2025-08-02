@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yoga_session_app/widgets/preview_widget.dart';
@@ -17,10 +19,11 @@ class PreviewScreen extends StatelessWidget {
       key: scaffoldKey,
       drawer: Drawer(
         surfaceTintColor: Colors.transparent,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.deepPurple[400],
         child: Center(child: Text("Data Unavailable")),
       ),
       appBar: AppBar(
+        toolbarHeight: size.height * .09,
         title: Text(
           "Yoga Sessions",
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -53,7 +56,7 @@ class PreviewScreen extends StatelessWidget {
           return Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-                  const SizedBox(height: 20),
+              const SizedBox(height: 20),
               Center(
                 child: Container(
                   margin: EdgeInsets.all(5),
@@ -62,7 +65,7 @@ class PreviewScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     border: Border.all(
                       color: Colors.deepPurple[300]!,
-                      width: 3
+                      width: 3,
                     ),
                     color: Colors.deepPurple[100],
                     borderRadius: BorderRadius.circular(15),

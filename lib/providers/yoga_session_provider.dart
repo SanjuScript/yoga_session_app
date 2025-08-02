@@ -22,7 +22,9 @@ class YogaSessionProvider extends ChangeNotifier {
   Duration _elapsedBeforePause = Duration.zero;
   DateTime? _progressStartTime;
   Timer? _progressUpdater;
+  bool _isMuted = false;
 
+  bool get isMuted => _isMuted;
   double get progress => _progress;
   YogaSession? get session => _session;
   int get sequenceIndex => _sequenceIndex;
@@ -55,9 +57,8 @@ class YogaSessionProvider extends ChangeNotifier {
     final script = sequence.script[_scriptIndex];
     final audioPath = _session!.assets.audio[sequence.audioRef]!;
 
-    // await _audioPlayer.setPlayerMode(PlayerMode.lowLatency);
     await _audioPlayer.play(AssetSource('audio/$audioPath'));
-    await _audioPlayer.setVolume(1.0);
+    await _audioPlayer.setVolume(_isMuted ? 0 : 1.0);
 
     _segmentDuration = Duration(seconds: script.endSec - script.startSec);
     _elapsedBeforePause = Duration.zero;
@@ -75,11 +76,18 @@ class YogaSessionProvider extends ChangeNotifier {
     try {
       // await _bgmPlayer.setPlayerMode(PlayerMode.mediaPlayer);
       await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
-      await _bgmPlayer.setVolume(.5);
+      await _bgmPlayer.setVolume(_isMuted ? 0 : .5);
       await _bgmPlayer.play(AssetSource('audio/bgm.mp3'));
     } catch (e) {
       log("Error playing BGM: $e");
     }
+  }
+
+  void toggleMute() async {
+    _isMuted = !_isMuted;
+    await _audioPlayer.setVolume(_isMuted ? 0 : 1);
+    await _bgmPlayer.setVolume(_isMuted ? 0 : .5);
+    notifyListeners();
   }
 
   void _startProgressUpdater() {

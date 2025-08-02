@@ -44,9 +44,30 @@ class PoseDisplay extends StatelessWidget {
             ),
           ),
         ),
-        Text(
-          "${(provider.progress * total).toInt()} / $total sec",
-          style: const TextStyle(color: Colors.black87, fontSize: 14),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Expanded(child: SizedBox()),
+            Center(
+              child: Text(
+                "${(provider.progress * total).toInt()} / $total sec",
+                style: const TextStyle(color: Colors.black87, fontSize: 14),
+              ),
+            ),
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  onPressed: () async {
+                    provider.toggleMute();
+                  },
+                  icon: Icon(
+                    provider.isMuted ? Icons.volume_off : Icons.volume_up,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         Expanded(

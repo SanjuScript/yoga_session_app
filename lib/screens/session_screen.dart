@@ -73,6 +73,7 @@ class _SessionScreenState extends State<SessionScreen> {
 
               if (provider.state == YogaSessionState.completed) {
                 Future.delayed(Durations.extralong4, () {
+                  provider.resetSession();
                   Navigator.pop(context);
                 });
                 return const Center(
@@ -82,7 +83,6 @@ class _SessionScreenState extends State<SessionScreen> {
                   ),
                 );
               }
-
               return Column(
                 children: [
                   Padding(
